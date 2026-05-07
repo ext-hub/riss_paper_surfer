@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "RISS Paper Surfer",
+  "version": "1.0",
+  "description": "숭실대 도서관 로그인을 통해 RISS 논문을 자동 검색하고 다운로드합니다.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
