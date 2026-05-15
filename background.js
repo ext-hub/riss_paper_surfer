@@ -2,12 +2,25 @@ let targetKeyword = "";
 let targetMax = 0;
 let searchTabId = null;
 let downloadedUrls = new Set(); // 중복 다운로드 방지용
-let paperTitles = []; // 논문 제목 목록
+let paperList = []; // 논문 정보 목록 (title, author, year)
+let selectedCategories = []; // 선택된 카테고리 목록
+let currentCategoryIndex = 0; // 현재 처리 중인 카테고리 인덱스
+let globalDownloadCount = 0; // 전체 다운로드 수
+
+// 카테고리 코드 → 한글 이름 매핑
+const categoryNames = {
+    "re_a_kor": "국내학술",
+    "bib_t": "학위논문",
+    "re_a_over": "해외학술"
+};
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "START_SCRAPING") {
         targetKeyword = request.keyword;
         targetMax = request.maxDownloads;
+        selectedCategories = request.categories || ["bib_t"];
+        currentCategoryIndex = 0;
+        globalDownloadCount = 0;
         downloadedUrls.clear(); // 새 검색 시작 시 초기화
         
         chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: "검색 페이지로 이동 중..."});
@@ -20,7 +33,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 chrome.tabs.query({active: true, currentWindow: true}, (activeTabs) => {
                     let activeTab = activeTabs[0];
                     if (activeTab && (activeTab.url.includes('riss.kr') || activeTab.url.includes('ssu.ac.kr'))) {
-                        startSearchOnTab(activeTab.id, activeTab.url);
+                        searchTabId = activeTab.id;
+                        processNextCategory();
                     } else {
                         // Open a new tab to riss via SSU
                         chrome.tabs.create({url: "https://oasis.ssu.ac.kr/"}, (tab) => {
@@ -29,38 +43,61 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }
                 });
             } else {
-                startSearchOnTab(rissTab.id, rissTab.url);
+                searchTabId = rissTab.id;
+                processNextCategory();
             }
         });
     } else if (request.action === "COLLECTED_LINKS") {
-        // content.js에 찾은 논문 개수와 제목 목록을 전달받음
+        // content.js에서 논문 정보 목록을 전달받음
         let total = request.total;
-        paperTitles = request.titles || [];
-        chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `총 ${total}개의 논문을 찾았습니다. 차례대로 원문 열람을 시도합니다...`});
+        paperList = request.papers || [];
+        let catName = categoryNames[selectedCategories[currentCategoryIndex]] || selectedCategories[currentCategoryIndex];
+        chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `[${catName}] 총 ${total}개의 논문을 찾았습니다. 차례대로 원문 열람을 시도합니다...`});
         
         downloadSequentially(total, 0);
     }
 });
 
-function startSearchOnTab(tabId, currentUrl) {
-    searchTabId = tabId;
-    let urlObj = new URL(currentUrl);
-    let baseUrl = urlObj.origin; 
+// 다음 카테고리 처리
+function processNextCategory() {
+    if (currentCategoryIndex >= selectedCategories.length) {
+        chrome.runtime.sendMessage({action: "DONE"});
+        return;
+    }
     
-    // RISS '학위논문' 검색결과 페이지 URL (colName=bib_t)
-    let searchUrl = `${baseUrl}/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&queryText=&strQuery=${encodeURIComponent(targetKeyword)}&exQuery=&exQueryText=&order=%2FDESC&query=${encodeURIComponent(targetKeyword)}&innerSearchYN=N&colName=bib_t`;
+    if (globalDownloadCount >= targetMax) {
+        chrome.runtime.sendMessage({action: "DONE"});
+        return;
+    }
+    
+    let category = selectedCategories[currentCategoryIndex];
+    let catName = categoryNames[category] || category;
+    chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `[${catName}] 검색 중...`});
+    
+    startSearchOnTab(searchTabId, category);
+}
+
+function startSearchOnTab(tabId, colName) {
+    // RISS 검색결과 페이지 URL (테스트에서 확인된 필수 파라미터 구조)
+    let encodedKeyword = encodeURIComponent(targetKeyword);
+    let searchUrl = `https://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&query=${encodedKeyword}&queryText=&iStartCount=0&iGroupView=5&colName=${colName}&exQuery=&exQueryText=&order=%2FDESC&onHanja=false&strSort=RANK&pageScale=10&sflag=1&fsearchMethod=search&isFDetailSearch=N&searchQuery=${encodedKeyword}&resultKeyword=${encodedKeyword}&pageNumber=1`;
     
     chrome.tabs.update(tabId, {url: searchUrl}, (tab) => {
         let listener = function(tId, changeInfo) {
             if (tId === tabId && changeInfo.status === 'complete') {
                 chrome.tabs.onUpdated.removeListener(listener);
                 setTimeout(() => {
-                    chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: "검색 완료! 원문 버튼을 확인합니다..."});
+                    let catName = categoryNames[colName] || colName;
+                    chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `[${catName}] 검색 완료! 원문 버튼을 확인합니다...`});
+                    
+                    // 남은 다운로드 수 계산
+                    let remaining = targetMax - globalDownloadCount;
+                    
                     chrome.scripting.executeScript({
                         target: {tabId: tabId},
                         files: ['content.js']
                     }, () => {
-                        chrome.tabs.sendMessage(tabId, {action: "EXTRACT", max: targetMax});
+                        chrome.tabs.sendMessage(tabId, {action: "EXTRACT", max: remaining});
                     });
                 }, 2000);
             }
@@ -70,16 +107,23 @@ function startSearchOnTab(tabId, currentUrl) {
 }
 
 function downloadSequentially(total, index) {
-    if (index >= total || index >= targetMax) {
-        chrome.runtime.sendMessage({action: "DONE"});
+    if (index >= total || globalDownloadCount >= targetMax) {
+        // 이 카테고리 완료, 다음 카테고리로
+        currentCategoryIndex++;
+        processNextCategory();
         return;
     }
     
-    let paperTitle = (paperTitles[index] && paperTitles[index].trim() !== '')
-        ? paperTitles[index].replace(/[\/\\?%*:|"<>]/g, '-')
-        : `논문_${index + 1}`;
+    let paper = paperList[index] || {};
+    let paperTitle = (paper.title && paper.title.trim() !== '') ? paper.title : `논문_${index + 1}`;
+    let paperAuthor = (paper.author && paper.author.trim() !== '') ? paper.author : '저자미상';
+    let paperYear = (paper.year && paper.year.trim() !== '') ? paper.year : '연도미상';
     
-    chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `논문 ${index + 1}/${total} 열람 중...\n"${paperTitle}"`});
+    // 파일명 형식: 저자_제목_발표연도.pdf
+    let displayName = `${paperAuthor}_${paperTitle}_${paperYear}`;
+    let catName = categoryNames[selectedCategories[currentCategoryIndex]] || selectedCategories[currentCategoryIndex];
+    
+    chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `[${catName}] 논문 ${globalDownloadCount + 1}/${targetMax} 열람 중...\n"${displayName}"`});
     
     let popupTabId = null;  // 팝업으로 열린 탭 ID
     let done = false;       // 중복 처리 방지 플래그
@@ -132,8 +176,16 @@ function downloadSequentially(total, index) {
             
             if (!downloadedUrls.has(targetUrl)) {
                 downloadedUrls.add(targetUrl);
+                globalDownloadCount++;
+                
+                // 파일명: 저자_제목_발표연도.pdf (특수문자 제거)
+                let safeAuthor = paperAuthor.replace(/[\/\\?%*:|"<>]/g, '-');
+                let safeTitle = paperTitle.replace(/[\/\\?%*:|"<>]/g, '-');
+                let safeYear = paperYear.replace(/[\/\\?%*:|"<>]/g, '-');
                 let cleanKeyword = targetKeyword.replace(/[\/\\?%*:|"<>]/g, '-');
-                let filename = `${cleanKeyword}/${paperTitle}.pdf`;
+                let catName = categoryNames[selectedCategories[currentCategoryIndex]] || '기타';
+                
+                let filename = `${cleanKeyword}/${catName}/${safeAuthor}_${safeTitle}_${safeYear}.pdf`;
                 
                 chrome.downloads.download({
                     url: targetUrl,
@@ -152,12 +204,10 @@ function downloadSequentially(total, index) {
     
     // 25초 내에 PDF를 감지 못하면 다음으로 넘어감
     timeoutId = setTimeout(() => {
-        chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `⚠️ 논문 ${index + 1} 시간 초과 — 다음으로 이동합니다`});
+        chrome.runtime.sendMessage({action: "UPDATE_STATUS", text: `⚠️ 논문 ${globalDownloadCount + 1} 시간 초과 — 다음으로 이동합니다`});
         moveToNext();
     }, 25000);
     
     // content.js에 해당 인덱스 버튼 클릭 지시 (리스너 등록 후!)
     chrome.tabs.sendMessage(searchTabId, {action: "CLICK_INDEX", index: index});
 }
-
-

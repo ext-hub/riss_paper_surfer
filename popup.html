@@ -7,11 +7,20 @@
     h3 { margin-top: 0; color: #1a73e8; text-align: center; }
     .input-group { margin-bottom: 12px; }
     label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
     button { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 5px; transition: background-color 0.2s; }
     button:hover { background-color: #1557b0; }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
     #status { margin-top: 15px; font-size: 13px; color: #555; white-space: pre-wrap; word-break: break-all; min-height: 40px; padding: 10px; background: white; border-radius: 4px; border: 1px solid #ddd; }
+    .filter-section { margin-bottom: 10px; }
+    .filter-section .section-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: bold; color: #333; }
+    .filter-section .toggle-options { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-section .toggle-item { display: flex; align-items: center; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+    .filter-section .toggle-item:hover { border-color: #1a73e8; background: #e8f0fe; }
+    .filter-section .toggle-item input[type="checkbox"],
+    .filter-section .toggle-item input[type="radio"] { margin: 0 5px 0 0; accent-color: #1a73e8; }
+    .filter-section .toggle-item.selected { border-color: #1a73e8; background: #e8f0fe; }
+    .filter-divider { border: none; border-top: 1px solid #e0e0e0; margin: 10px 0; }
   </style>
 </head>
 <body>
@@ -20,6 +29,40 @@
     <label>검색 키워드</label>
     <input type="text" id="keyword" placeholder="예: 인공지능">
   </div>
+
+  <hr class="filter-divider">
+
+  <div class="filter-section">
+    <span class="section-label">학술논문</span>
+    <div class="toggle-options">
+      <label class="toggle-item selected">
+        <input type="radio" name="academic" value="re_a_kor" checked> 국내
+      </label>
+      <label class="toggle-item">
+        <input type="radio" name="academic" value="re_a_over"> 해외
+      </label>
+      <label class="toggle-item">
+        <input type="radio" name="academic" value="none"> 없음
+      </label>
+    </div>
+  </div>
+
+  <hr class="filter-divider">
+
+  <div class="filter-section">
+    <span class="section-label">학위논문</span>
+    <div class="toggle-options">
+      <label class="toggle-item selected">
+        <input type="radio" name="thesis" value="yes" checked> O
+      </label>
+      <label class="toggle-item">
+        <input type="radio" name="thesis" value="no"> X
+      </label>
+    </div>
+  </div>
+
+  <hr class="filter-divider">
+
   <div class="input-group">
     <label>다운로드 수</label>
     <input type="number" id="maxDownloads" value="3" min="1">
