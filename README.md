@@ -1,6 +1,6 @@
 # RISS Paper Surfer 🏄‍♂️📄
 
-![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Extension-blue?logo=googlechrome&logoColor=white)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Extension-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/riss-paper-surfer/mneaffdijjooolhgahgplpbpidcpjpbh?hl=ko&utm_source=ext_sidebar)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
 **RISS Paper Surfer**는 논문 수집에 소모되는 단순 반복 작업을 획기적으로 줄여주는 크롬 확장 프로그램(Chrome Extension)입니다. 
@@ -8,9 +8,12 @@
 
 ## ✨ 주요 기능 (Features)
 
+### v1.1 (Latest)
+* **논문 유형 선택**: 학술논문(국내/해외) 및 학위논문을 독립적으로 선택하여 원하는 유형만 수집할 수 있습니다.
+* **스마트한 파일 관리**: `[검색 키워드]/[논문 유형]` 폴더 자동 분류 및 `[저자]_[제목]_[연도].pdf` 규칙으로 파일을 체계적으로 관리합니다.
+
+### v1.0
 * **원클릭 자동 다운로드**: 검색어와 원하는 다운로드 개수만 입력하면 알아서 논문을 탐색하고 다운로드합니다.
-* **논문 유형 선택**: 학술논문(국내 / 해외)과 학위논문을 독립적으로 선택하여 원하는 유형만 수집할 수 있습니다.
-* **스마트한 파일 관리**: 다운로드된 논문은 `[검색 키워드]/[논문 유형]` 폴더에 자동 분류되며, 파일명은 `[저자]_[논문 제목]_[발표연도].pdf`로 저장됩니다.
 * **백그라운드 처리**: 확장 프로그램이 다운로드를 진행하는 동안 사용자는 다른 탭에서 자유롭게 웹 서핑을 할 수 있습니다.
 * **동적 팝업 뷰어 핸들링**: 수많은 대학교 도서관의 각기 다른 외부 뷰어 도메인 환경에서도 URL 변화를 감지하여 안정적으로 PDF를 추출합니다.
 
@@ -21,7 +24,7 @@
 
 ## 🚀 설치 및 사용 방법 (How to Use)
 
-1. [크롬 웹 스토어 링크(출시 후 링크 삽입 예정)]() 에서 확장 프로그램을 설치합니다.
+1. [크롬 웹 스토어](https://chromewebstore.google.com/detail/riss-paper-surfer/mneaffdijjooolhgahgplpbpidcpjpbh?hl=ko&utm_source=ext_sidebar) 에서 확장 프로그램을 설치합니다.
 2. 대학 도서관 홈페이지(예: oasis.ssu.ac.kr)에 접속하여 **로그인**합니다.
 3. 도서관 홈페이지의 링크를 통해 RISS에 접속합니다. (인증 세션 유지)
 4. 주소창 우측의 확장 프로그램 아이콘을 클릭하고, 검색할 **키워드**와 **개수**를 입력합니다.
