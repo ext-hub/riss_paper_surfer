@@ -3,72 +3,185 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 15px; width: 300px; background-color: #f8f9fa; margin: 0; }
-    h3 { margin-top: 0; color: #1a73e8; text-align: center; }
-    .input-group { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
-    input[type="text"], input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-    button { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 5px; transition: background-color 0.2s; }
-    button:hover { background-color: #1557b0; }
-    button:disabled { background-color: #ccc; cursor: not-allowed; }
-    #status { margin-top: 15px; font-size: 13px; color: #555; white-space: pre-wrap; word-break: break-all; min-height: 40px; padding: 10px; background: white; border-radius: 4px; border: 1px solid #ddd; }
-    .filter-section { margin-bottom: 10px; }
-    .filter-section .section-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: bold; color: #333; }
-    .filter-section .toggle-options { display: flex; flex-wrap: wrap; gap: 6px; }
-    .filter-section .toggle-item { display: flex; align-items: center; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; font-size: 13px; }
-    .filter-section .toggle-item:hover { border-color: #1a73e8; background: #e8f0fe; }
-    .filter-section .toggle-item input[type="checkbox"],
-    .filter-section .toggle-item input[type="radio"] { margin: 0 5px 0 0; accent-color: #1a73e8; }
-    .filter-section .toggle-item.selected { border-color: #1a73e8; background: #e8f0fe; }
-    .filter-divider { border: none; border-top: 1px solid #e0e0e0; margin: 10px 0; }
+    :root {
+      --primary-color: #1a73e8;
+      --bg-color: #f8f9fa;
+      --text-color: #333;
+      --border-color: #ddd;
+    }
+    body { 
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; 
+      padding: 20px; 
+      width: 320px; 
+      background-color: var(--bg-color); 
+      margin: 0; 
+      color: var(--text-color);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h3 { 
+      margin: 0; 
+      color: var(--primary-color); 
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+    .input-group { margin-bottom: 18px; }
+    label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-size: 14px; 
+      font-weight: 600; 
+      color: #444; 
+    }
+    input[type="text"], input[type="number"] { 
+      width: 100%; 
+      padding: 10px; 
+      box-sizing: border-box; 
+      border: 1px solid var(--border-color); 
+      border-radius: 6px; 
+      font-size: 14px; 
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.1);
+    }
+    
+    .category-section {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 18px;
+    }
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .category-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 8px;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      position: relative;
+    }
+    .category-item:hover {
+      background-color: #f8f9fa;
+      border-color: #ccc;
+    }
+    .category-item input {
+      margin-right: 8px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+    .category-item.active {
+      border-color: var(--primary-color);
+      background-color: #e8f0fe;
+      color: var(--primary-color);
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(26,115,232,0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    button { 
+      flex: 2;
+      padding: 14px; 
+      background-color: var(--primary-color); 
+      color: white; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      font-size: 15px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    button.secondary {
+      flex: 1;
+      background-color: #dc3545;
+    }
+    button.secondary:hover {
+      background-color: #c82333;
+    }
+    button:hover { 
+      background-color: #1557b0; 
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    button:disabled { 
+      background-color: #ccc; 
+      cursor: not-allowed; 
+      transform: none;
+      box-shadow: none;
+    }
+    
+    #status { 
+      margin-top: 15px; 
+      font-size: 12px; 
+      color: #666; 
+      line-height: 1.5;
+      padding: 12px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      min-height: 50px;
+      white-space: pre-wrap;
+    }
+    .info-text {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
-  <h3>RISS 논문 다운로더</h3>
+  <div class="header">
+    <h3>RISS Paper Surfer 🏄‍♂️</h3>
+  </div>
+
   <div class="input-group">
     <label>검색 키워드</label>
     <input type="text" id="keyword" placeholder="예: 인공지능">
   </div>
 
-  <hr class="filter-divider">
-
-  <div class="filter-section">
-    <span class="section-label">학술논문</span>
-    <div class="toggle-options">
-      <label class="toggle-item selected">
-        <input type="radio" name="academic" value="re_a_kor" checked> 국내
-      </label>
-      <label class="toggle-item">
-        <input type="radio" name="academic" value="re_a_over"> 해외
-      </label>
-      <label class="toggle-item">
-        <input type="radio" name="academic" value="none"> 없음
-      </label>
+  <div class="input-group">
+    <label>수집 카테고리 선택</label>
+    <div class="category-section">
+      <div class="category-grid">
+        <label class="category-item"><input type="radio" name="cat" value="re_a_kor">국내학술논문</label>
+        <label class="category-item active"><input type="radio" name="cat" value="bib_t" checked>학위논문</label>
+        <label class="category-item"><input type="radio" name="cat" value="re_a_over">해외학술논문</label>
+        <label class="category-item"><input type="radio" name="cat" value="bib_s">학술지</label>
+        <label class="category-item"><input type="radio" name="cat" value="bib_m">단행본</label>
+        <label class="category-item"><input type="radio" name="cat" value="re_a_report">연구보고서</label>
+      </div>
     </div>
   </div>
-
-  <hr class="filter-divider">
-
-  <div class="filter-section">
-    <span class="section-label">학위논문</span>
-    <div class="toggle-options">
-      <label class="toggle-item selected">
-        <input type="radio" name="thesis" value="yes" checked> O
-      </label>
-      <label class="toggle-item">
-        <input type="radio" name="thesis" value="no"> X
-      </label>
-    </div>
-  </div>
-
-  <hr class="filter-divider">
 
   <div class="input-group">
-    <label>다운로드 수</label>
-    <input type="number" id="maxDownloads" value="3" min="1">
+    <label>최대 다운로드 수 (최대 1000개)</label>
+    <input type="number" id="maxDownloads" value="1" min="1" max="1000">
+    <div class="info-text">* 검색 결과가 많으면 자동으로 다음 페이지를 탐색합니다.</div>
   </div>
-  <button id="startBtn">자동 다운로드 시작</button>
-  <div id="status">숭실대 포털을 통해 RISS에 먼저 접속하고 로그인한 상태에서 실행해주세요.</div>
+
+  <div class="button-group">
+    <button id="startBtn">자동 다운로드 시작</button>
+    <button id="stopBtn" class="secondary" disabled>중단</button>
+  </div>
+  
+  <div id="status">로그인된 RISS 탭이 열려있어야 정상 동작합니다.</div>
+
   <script src="popup.js"></script>
 </body>
 </html>

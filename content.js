@@ -8,10 +8,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             
             if (resultElements.length === 0) {
                 attempts++;
-                if (attempts < 10) {
+                if (attempts < 8) { // 시도 횟수 약간 조정
                     setTimeout(tryExtract, 1000);
                 } else {
-                    chrome.runtime.sendMessage({action: "ERROR", text: "검색 결과가 없거나 원문보기 버튼을 찾을 수 없습니다."});
+                    // 에러 대신 결과 없음 메시지 전송 (페이지네이션 처리를 위해)
+                    chrome.runtime.sendMessage({action: "NO_RESULTS"});
                 }
                 return;
             }
